@@ -1,6 +1,6 @@
-# AGENTS.md — Co-creating short-form video montages
+# AGENTS.md — Co-creating video montages
 
-This document is the brief for an AI coding agent helping a user turn a raw recording (typically a screen-capture demo with voiceover) into a polished long-form + short-form package ready for YouTube, Shorts, TikTok, Reels, LinkedIn, etc. It is the distilled output of one full session that produced two video deliverables and two thumbnails. Read it end-to-end before starting.
+This document is the brief for an AI coding agent helping a user turn a raw recording (e.g. a screen-capture demo with voiceover) into a polished long-form + short-form package ready for YouTube, Shorts, TikTok, Reels, LinkedIn, etc. It is the distilled output of one full session that produced two video deliverables and two thumbnails. Read it end-to-end before starting.
 
 The constraint that drives every decision below: **the user is iterating in a tight loop with you and is not going to read prose specs.** Show, don't tell. Render preview frames. Open them on screen. Ask short specific questions. Convergence is fast when the visual feedback loop is fast.
 
