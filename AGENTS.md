@@ -4,6 +4,8 @@ This document is the brief for an AI coding agent helping a user turn a raw reco
 
 The constraint that drives every decision below: **the user is iterating in a tight loop with you and is not going to read prose specs.** Show, don't tell. Render preview frames. Open them on screen. Ask short specific questions. Convergence is fast when the visual feedback loop is fast.
 
+**Platform note.** This brief was written on Linux; commands assume it. On macOS (or elsewhere) translate before running: `eog <file>` → `open <file>` (or `code <file>` if the user lives in VS Code and wants to stay on one desktop/Space); DejaVu font paths → an installed font (e.g. `/System/Library/Fonts/Supplemental/Arial Bold.ttf`); whisper `device=cuda,compute_type=float16` → `device=cpu,compute_type=int8` (no CUDA on Apple Silicon). **Check `ffmpeg -filters | grep subtitles` early** — some builds (including Homebrew's default) ship *without* libass, so the `subtitles`/`ass` filter is missing and caption burning fails; if so, burn captions with a small PIL/OpenCV renderer instead (see §5.7).
+
 ---
 
 ## 0. The non-negotiables
@@ -107,7 +109,7 @@ Ask the user for start/end timestamps. They usually know.
 
 ## 4. Denoise audio (the start-of-clip artifact)
 
-A common foot-gun: `loudnorm` in single-pass mode auto-adapts gain at the start because it has no audio history. Result: the first 1–2 seconds are obviously louder/distorted, then it settles. Users notice instantly and complain.
+A common foot-gun: `loudnorm` in single-pass mode auto-adapts gain at the start because it has no audio history. Result: the first 1–2 seconds are obviously louder/distorted, then it settles. Viewers tend to notice it.
 
 **Fix: two-pass loudnorm.** First pass measures, second pass applies the measured values explicitly.
 
@@ -129,6 +131,18 @@ measured_I=<v>:measured_TP=<v>:measured_LRA=<v>:measured_thresh=<v>:offset=<v>:l
 `afftdn nr=18 nf=-25` is a good baseline for typical webcam-mic hiss. If the user reports residual hiss, bump `nr` to 25–30. `highpass=f=80` cuts low-frequency rumble (HVAC, room hum) without touching speech.
 
 If the user reports a problem at the very start ("intense annoying sound for the first two seconds"), it's almost always loudnorm single-pass. Switch to two-pass before suspecting anything else.
+
+### 4.1 Phone-mic auto-gain (AGC) hiss
+
+Phone cameras run automatic gain control: in quiet passages the mic ramps gain up, lifting the noise floor, so a broadband hiss swells in the gaps and ducks under speech. It's baked in at record time. `afftdn` (FFT denoise) handles mild cases; for stronger or time-varying noise, an RNN denoiser (`arnndn` with a small `.rnnn` model) is cleaner and avoids the warbly "musical noise" `afftdn` can leave. Measure a silent gap's RMS vs a speech RMS to gauge severity before picking strength, and A/B candidates by ear at delivery loudness.
+
+### 4.2 loudnorm goes *dynamic* on wide-LRA clips — and pumps the gaps
+
+Two-pass loudnorm with `linear=true` silently falls back to **dynamic** mode when the measured LRA is too wide to hit the target with a single gain (common when there are long silences). Dynamic mode boosts the quiet sections — re-amplifying exactly the hiss/reverb you just removed. Tell-tale: after processing, a "silent" gap measures almost as loud as speech. Fix: don't chase −16 LUFS with loudnorm here. Use a **linear makeup gain + a limiter** (`volume=NdB,alimiter=limit=0.84`) so the speech-to-gap ratio is preserved and only true peaks are clamped; accept a slightly lower integrated loudness (platforms re-normalize anyway).
+
+### 4.3 Denoise + makeup gain un-masks room reverb
+
+After removing the hiss and adding makeup gain, the room's natural reverb tail (previously masked by the hiss) becomes audible — a "ringing / resonating" sound after each phrase. It's not an artifact, it's amplified reverb. A gentle **downward expander/gate** (`agate`, threshold just below speech level, ~200 ms release) ducks the gaps so tails decay into silence. Verify by comparing a post-phrase gap's RMS before vs after, and confirm by ear.
 
 ---
 
@@ -194,7 +208,7 @@ If you render the active word bold (`\b1`) and the rest non-bold (`\b0`), the te
 - Set `Bold=1` in the Style row (everything bold by default).
 - Don't put `\b0` or `\b1` in any Dialogue line. Only colour changes.
 
-This was the single most reported caption issue from the live session.
+This was a recurring caption issue worth checking for.
 
 #### Position captions where there's "nothing interesting"
 
@@ -238,7 +252,7 @@ ffmpeg -i in.mp4 -vf "subtitles=captions.ass" \
   -c:a aac -b:a 192k -movflags +faststart out.mp4
 ```
 
-The `subtitles=` filter takes an absolute path and burns into pixels.
+The `subtitles=` filter takes an absolute path and burns into pixels. (If this ffmpeg lacks libass — see the Platform note — the filter won't exist and this fails. Fallback: burn the karaoke with a PIL/OpenCV pass that reads the word timings from `captions.json` and draws each word, the active one tinted, with a black stroke. Same look, no libass.)
 
 For LANDSCAPE captions from a vertical ASS, you don't need to regenerate — just rewrite the header:
 
@@ -277,7 +291,19 @@ The detection script must produce a PNG with:
 - A label box on top of each rectangle: `name x=X y=Y w=W h=H` — coordinates immediately readable.
 - A faint coordinate grid every 50 px, with yellow numeric labels every 100 px.
 
-The grid is the fallback. If detection is even slightly off, the user can read off the corrected coords and dictate them. The user described this exact format ("detected_v5.png") as "an excellent way of communicating about areas on an image."
+The grid is the fallback. If detection is even slightly off, the user can read off the corrected coords and dictate them — a reliable way to communicate about areas on an image.
+
+---
+
+## 6.5 Background blur & privacy redaction
+
+The user often wants to hide background clutter (photos, shelves, notes) without a fake video-call look.
+
+- **Static rectangles** are simplest and most robust for a locked-off camera — but they look like rectangles and clip the subject if it drifts into them. Place them with the coordinate-grid overlay (§6), and *render the blur as a still and confirm visually* before committing.
+- **Whole-background segmentation** (the video-call effect) tends to disappoint on a static shot and is the thing users reject: the models are trained on *people*, so they blur co-stars (robots, products), and edges shimmer.
+- **The reliable middle ground:** blur a region but **carve the real subject out of it**. Get a per-frame foreground mask (`rembg`/U²-Net or selfie-segmentation), then **keep only the connected component(s) that reach the lower frame**. This drops false positives like *people printed in a wall photo* — a real gotcha: salient-object models flag them as foreground — while keeping the actual person. For non-human objects or thin parts the model misses (a robot body, antennas), union in a **generous static keep-zone**. Feather the mask and **temporally smooth it (EMA across frames)** to kill shimmer.
+- A head-aware **band** (blur a horizontal strip above the head, carve the head out) is a good compromise when only one area needs hiding and the head moves through its edge.
+- Per-frame inference is the slow part: process only the final cut, run it in the background, and apply any colour grade *after* the blur so you can re-grade cheaply without re-blurring.
 
 ---
 
@@ -497,6 +523,10 @@ What to render and where to upload:
 
 **Do not skip making `long_landscape.mp4`.** Every multi-platform deployment needs both the vertical short and a landscape long. The vertical-long version (1080×1920 for the full duration) is rarely used as a deliverable — it's an intermediate from which `short_vertical` is cut.
 
+### 11.1 Reframing a landscape source for vertical / square
+
+When the source is 16:9 but the subjects sit centrally, don't just scale-and-letterbox into 9:16 (lots of blurred bar — looks lazy). **Crop the sides** to the region that matters, then scale that up: the content fills far more of the 9:16 frame and the blur bars shrink. A **1:1 square** (the same side-crop, no bars) is the best feed format for LinkedIn / Twitter-X / Reddit. Pick formats by what distribution actually needs: 9:16 for Shorts/Reels/TikTok, 1:1 for feeds, 16:9 only for YouTube-as-video or embeds (and even then a slight punch-in removes dead edges). Don't assume landscape is mandatory — ask where it's going.
+
 ---
 
 ## 12. Communication style
@@ -522,7 +552,9 @@ What to render and where to upload:
 - **Cutting silences inside demo moments.** Manual segment cuts beat blind silence compression. (See §9.)
 - **Pre-emptive complex montages.** Honour the user's first simple idea, *then* show why it doesn't work if it doesn't. (See §0.)
 - **Not naming `final_versions/` files with `_landscape` / `_vertical` suffixes.** Ambiguous filenames break the user's distribution flow. (See §2.)
-- **Forgetting to pop files via `eog`.** It's the single biggest UX win in the loop.
+- **Forgetting to pop files via `eog`/`open`.** Showing the file is the single biggest UX win in the loop.
+- **Trying to "fix" source motion blur / compression artifacts.** You can't recover detail. Mild `fspp`/`pp7` deblock + `hqdn3d`/`nlmeans` denoise + a touch of `unsharp` cleans compression mush; 60 fps `minterpolate` can smooth motion but may warp fast movement. Set expectations, and for future shoots advise filming 4K/60.
+- **Using copyrighted music "slightly changed" to dodge Content ID.** Don't — it can still be claimed/struck and it's circumventing rights. Generate *original* cinematic music (e.g. Suno) in the desired style instead, and duck it under the voice with sidechain compression.
 
 ---
 
