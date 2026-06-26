@@ -16,6 +16,7 @@ The constraint that drives every decision below: **the user is iterating in a ti
 - **Iterate on stills before video.** Full re-encodes are slow (1–3 min). Preview frames are instant. If you're choosing between layouts, render every candidate as a 1920×1080 (or 1080×1920) PNG and pop them up side by side.
 - **Never preemptively over-engineer.** If the user asks for a "simple symmetric center crop" first, give them that crop verbatim. If it loses content, *show* the loss visually — then propose the more complex layout. Skipping the simple version because you know better forces the user to circle back.
 - **Fix root causes, not symptoms.** A weird audio artifact at the start? Don't shave 2 seconds off the trim — figure out it's `loudnorm` single-pass adapting gain and switch to two-pass. A subtitle not rendering at the right time? Don't reposition it — figure out that `-ss` before `-i` reset the timeline and use output seek.
+- **Final deliverables go to `~/Videos/` by default.** When the user approves a version as final, move (or copy) it into the user's `~/Videos/` folder — that's where they collect finished videos for upload. Keep the descriptive `_landscape`/`_vertical` filename. The project's `final_versions/` copy is for traceability; `~/Videos/` is the hand-off.
 
 ---
 
@@ -87,6 +88,8 @@ work/
 ```
 
 **Naming convention** for `final_versions/`: every file ends in `_landscape` or `_vertical`. The user uses these as deliverables and won't tolerate ambiguous filenames.
+
+**Hand-off location:** once a version is approved as final, place it in the user's `~/Videos/` folder (see §0) — that's the default drop point for finished deliverables, not just the project `final_versions/` subfolder.
 
 When a version is locked in `final_versions/`, archive the previous one to `iterations/<category>/<old_name>.mp4`. Don't delete; the user may want to compare.
 
