@@ -1,0 +1,17 @@
+# media and generated binaries stay local; only scripts, timings and notes are versioned
+*.mp4
+*.wav
+*.mp3
+*.png
+*.jpg
+*.rnnn
+work/.venv-whisper/
+work/source/
+work/samples/
+work/candidates/
+work/candidates_switch/
+work/final_versions/
+work/music/
+work/music_switch/
+.DS_Store
+__pycache__/

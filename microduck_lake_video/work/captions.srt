@@ -1,0 +1,52 @@
+1
+00:00:01,290 --> 00:00:03,010
+Reachy Mini: Hey, Microduck!
+
+2
+00:00:05,640 --> 00:00:07,390
+Reachy Mini: Look, I have to talk to you.
+
+3
+00:00:12,990 --> 00:00:16,240
+Reachy Mini: I know you were very excited to go to the lake.
+
+4
+00:00:16,370 --> 00:00:18,520
+Reachy Mini: But we won't be able to go today.
+
+5
+00:00:18,630 --> 00:00:19,810
+Reachy Mini: I'm sorry.
+
+6
+00:00:28,860 --> 00:00:30,600
+The Human: But why?
+
+7
+00:00:32,880 --> 00:00:35,130
+Reachy Mini: Because, well...
+
+8
+00:00:35,360 --> 00:00:38,250
+Reachy Mini: the meteorological conditions are...
+
+9
+00:00:38,300 --> 00:00:40,150
+Reachy Mini: not optimal right now.
+
+10
+00:00:40,300 --> 00:00:41,500
+The Human: But...
+
+11
+00:00:46,760 --> 00:00:49,000
+The Human: Are you scared?
+
+12
+00:00:51,040 --> 00:00:53,070
+Reachy Mini: No. I'm not scared.
+
+13
+00:00:53,120 --> 00:00:56,110
+Reachy Mini: I'm just optimizing our long-term survivability.
+

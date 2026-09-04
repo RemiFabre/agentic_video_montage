@@ -1,0 +1,80 @@
+[
+ {
+  "who": "Reachy Mini",
+  "text": "Hey, Microduck!",
+  "start": 1.29,
+  "end": 3.01
+ },
+ {
+  "who": "Reachy Mini",
+  "text": "Look, I have to talk to you.",
+  "start": 5.64,
+  "end": 7.39
+ },
+ {
+  "who": "Reachy Mini",
+  "text": "I know you were very excited to go to the lake.",
+  "start": 12.99,
+  "end": 16.24
+ },
+ {
+  "who": "Reachy Mini",
+  "text": "But we won't be able to go today.",
+  "start": 16.37,
+  "end": 18.52
+ },
+ {
+  "who": "Reachy Mini",
+  "text": "I'm sorry.",
+  "start": 18.63,
+  "end": 19.81
+ },
+ {
+  "who": "The Human",
+  "text": "But why?",
+  "start": 28.86,
+  "end": 30.6
+ },
+ {
+  "who": "Reachy Mini",
+  "text": "Because, well...",
+  "start": 32.88,
+  "end": 35.13
+ },
+ {
+  "who": "Reachy Mini",
+  "text": "the meteorological conditions are...",
+  "start": 35.36,
+  "end": 38.25
+ },
+ {
+  "who": "Reachy Mini",
+  "text": "not optimal right now.",
+  "start": 38.3,
+  "end": 40.15
+ },
+ {
+  "who": "The Human",
+  "text": "But...",
+  "start": 40.3,
+  "end": 41.5
+ },
+ {
+  "who": "The Human",
+  "text": "Are you scared?",
+  "start": 46.76,
+  "end": 49.0
+ },
+ {
+  "who": "Reachy Mini",
+  "text": "No. I'm not scared.",
+  "start": 51.04,
+  "end": 53.07
+ },
+ {
+  "who": "Reachy Mini",
+  "text": "I'm just optimizing our long-term survivability.",
+  "start": 53.12,
+  "end": 56.11
+ }
+]

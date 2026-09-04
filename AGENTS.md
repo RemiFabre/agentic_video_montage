@@ -558,6 +558,11 @@ When the source is 16:9 but the subjects sit centrally, don't just scale-and-let
 - **Forgetting to pop files via `eog`/`open`.** Showing the file is the single biggest UX win in the loop.
 - **Trying to "fix" source motion blur / compression artifacts.** You can't recover detail. Mild `fspp`/`pp7` deblock + `hqdn3d`/`nlmeans` denoise + a touch of `unsharp` cleans compression mush; 60 fps `minterpolate` can smooth motion but may warp fast movement. Set expectations, and for future shoots advise filming 4K/60.
 - **Using copyrighted music "slightly changed" to dodge Content ID.** Don't — it can still be claimed/struck and it's circumventing rights. Generate *original* cinematic music (e.g. Suno) in the desired style instead, and duck it under the voice with sidechain compression.
+- **Measuring audio levels with output seek.** `ffmpeg -i f -ss X -t Y -af astats` feeds astats the *whole* file (the seek is applied at the muxer), so every window reads the same. Put `-ss X -t Y` **before** `-i` for measurements. (See §15.)
+- **Treating phone "wind" as hiss.** It's usually sub-150 Hz rumble: `afftdn` does nothing, `arnndn` eats the voice. Profile per octave first, then high-pass. (See §15.)
+- **Boosting one part of the dialogue and not the rest.** Level every line to the same band before touching music; otherwise the music "wins" only in the quiet parts and the user hears a bug. (See §15.)
+- **Trusting `ffprobe` width×height on phone footage.** A rotation tag makes the decoded frame 1080×1920; overlays sized 1920×1080 get clipped. Probe the *decoded* stream of your trimmed file. (See §15.)
+- **zsh inside ffmpeg filter strings.** `$END[ma]` is an array subscript and `$THR:ratio` a modifier — both silently mangle the filter graph. Write `${END}[ma]` / `${THR}:ratio`.
 
 ---
 
@@ -607,7 +612,37 @@ For multiple files, batch them in a single `eog file1.png file2.png &` call.
 
 ---
 
-## 15. The mental model
+## 15. Scripted robot skits: phone footage, TTS lines, music beds
+
+Distilled from the "Microduck and Reachy Mini" episodes (2026-09, `microduck_lake_video/` in this repo keeps the scripts). A skit = a phone-filmed scene where a robot speaks pre-rendered TTS lines (ElevenLabs) and the user speaks a few off-screen lines. The captions are known text; the job is timing, clean-up, music.
+
+### Timing without guessing
+- **Line starts:** cross-correlate each line WAV with the footage audio (band-limited 200–4000 Hz log-band envelopes, normalised) and keep a runner-up score as a confidence check. A short line under noise can lock onto the wrong peak — constrain each search window with the scene's beat table. `work/scripts/align_lines.py`.
+- **Word times:** run whisper (`faster-whisper` medium, `device=cpu, compute_type=int8`) on the clean TTS WAVs (word offsets inside the line) and on the footage (the human's lines). Whisper on the footage will hallucinate a "Thanks for watching!" at the very end; ignore trailing junk.
+- Robot caption = line start + word offset; human caption = whisper on footage. Chunk on punctuation and the TTS's own pauses (e.g. split at a `[nervous laugh]` tag).
+
+### Caption look (keep identical across episodes)
+Arial Bold 58 px white, 3 px black stroke, small amber (255,196,60) speaker tag in caps above the text, black 150-alpha rounded box (radius 18), centred at the bottom. Rendered with PIL PNG overlays + ffmpeg `overlay=enable='between(t,a,b)'` (no libass/drawtext on this Mac). A second speaker gets its own tag ("THE HUMAN"); the label "Reachy Mini: " lives only in the SRT. On vertical footage raise the bottom margin (160 px vs 90 px landscape) to clear phone UI.
+
+### Phone audio clean-up (the order matters)
+1. **Profile per octave** (`highpass`+`lowpass`+`astats`, input seek) on a noise-only window and a speech window. Wind/handling on a phone is sub-150 Hz rumble at −15 dB while the voice sits at −40 dB; you cannot see that on a full-band RMS.
+2. **High-pass, not denoise.** Two cascaded `highpass=f=220:poles=2` (24 dB/oct) where the rumble is; a gentler 160 Hz elsewhere so the human's voice keeps its body. Crossfade the segments (`acrossfade`, 0.4 s). `afftdn` only as a light second pass. `arnndn` (rnnoise) removed the TTS voice with the noise — don't.
+3. **Find every gust, not just the obvious one.** A 1 s grid of sub-150 Hz RMS over the whole clip (the lake episode had gusts at 0–9 s, 12–16 s, 20 s and a pan-handling burst at 41–43 s).
+4. **Level the dialogue.** Far-mic lines need makeup gain (+10 dB when the robot is across the room); then bring *everything* into one band (all lines within ~6 dB), `alimiter` at −1 dB as safety. Do this before any music decision.
+5. `work/scripts/clean_dialogue.py` is the template (segment list → filter graph).
+
+### Music beds (ElevenLabs Music API)
+- `agentic_robot_theater/video/gen_music.py`: `client.music.compose(prompt, music_length_ms, force_instrumental=True)`, **one request at a time**, ~8 s per track, key `ELEVENLABS_API_KEY`. Offer 8 named identities per round; end prompts with "under dialogue, instrumental only".
+- Keep a series identity across episodes (the user cares): same instrument family, bend the mood per episode.
+- **Mix template that the user approved** (`mix_music.sh`): music `volume=-12dB`, 1.5 s fade-in, `sidechaincompress=threshold=0.02:ratio=5:attack=40:release=700` keyed on the dialogue, `amix normalize=0`, music fades 1 s before the picture's 0.6 s fade-out. Reuse it verbatim; the voice level is what you normalise, not the template.
+- **Mid-video music switch on a tonal turn** (`mix_two_cues.sh`): cue A cut in 0.25 s exactly when the reveal fills the frame, 0.3 s of nothing, cue B from its first downbeat (`silencedetect` to trim leading silence, seek it with input `-ss`, then `adelay`). Generate cue B as 20–22 s tracks prompted to "start immediately on a strong downbeat"; level cue B ≈ cue A + 2 dB. The user called this "PERFECT" — offer it whenever the story pivots.
+
+### Hands-free review
+The user is often listening with hands busy: `afplay <file.mp4>` plays the audio from the terminal (`pkill -x afplay` to stop). `open` does not auto-play in QuickTime and AppleScript control is blocked by a permission prompt. For picture, short preview mp4s in a folder + `open <folder>`.
+
+---
+
+## 16. The mental model
 
 The user is the director. You are the editor and the renderer. The user has the taste and the final cut authority. You have the tools and the speed. Convergence is fast when:
 
