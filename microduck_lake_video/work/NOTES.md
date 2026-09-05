@@ -78,3 +78,13 @@ Frame 23.0 s of the cut (01_trimmed, no captions; head just starting to droop, e
 Text added by gpt-image-2 edit with ep1's final.jpg as a style reference (prompt `thumbnail/duck/prompt_nicetry.txt`); of 2 outputs one recomposed the shot (diff 24), the other is pixel-faithful (diff 2.1) -> kept.
 `final_versions/microduck_lake_ep2_thumbnail_nicetry_landscape.jpg`. Thumbnail A stays `..._thumbnail_landscape.jpg` (ep1 photo, "EPISODE 2"). Both for YouTube Test & Compare.
 Lesson: with gpt-image-2 edits, always request n=2 and keep the one whose pixels match the input outside the text; about half the outputs silently recompose.
+
+## Thumbnails B and C, final (2026-09-05)
+- B "DEVASTATED" (`final_versions/microduck_lake_ep2_thumbnail_devastated_landscape.jpg`): frame 23.0 s, whole duck sitting. gpt-image-2 always repaints when
+  outpainting (three passes, duck re-rendered ~0.73x each time, prompts cannot stop it), so the accepted route is: outpaint (prompt_devastated2.txt) -> ask the model to
+  re-frame its own image tighter (prompt_devastated_zoom.txt, feet near the bottom) -> scale 1536x1024 to 1080x720 and fill 100 px per side with mirrored + blurred edges
+  (`thumbnail/duck/devastated_wide_1.jpg`). Cropping a 3:2 output to 16:9 always cuts either the text or the feet; widening with mirrored edges is the fix.
+  Faithful (real-pixel) fallback: `thumbnail/duck/B2_blur_sides_ai_text.jpg`. Local inpaint + re-text attempts left residue at the top, abandoned.
+- C "REAL ROBOTS" painting (`..._thumbnail_painting_realrobots_landscape.jpg`, no-text variant next to it): gpt-image-2 edit with Rémi's pencil-style Reachy Mini
+  drawing as image 1 (style + character) and the Microduck product photo as image 2, prompt `thumbnail/painting/prompt_painting_text.txt`; robots called "robot A/B".
+  Duck came out faithful. Same 16:9 widening trick. Lifting the model's text as a layer onto another image does not work on textured paper (grain in the mask).
