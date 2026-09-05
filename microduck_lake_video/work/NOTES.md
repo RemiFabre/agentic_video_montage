@@ -61,3 +61,14 @@ Music: E04 pixar_confession until the garden reveal (40.9 s), 0.3 s silence, T1 
   already carry a different "NEW FRIEND?" in Impact). Fix: gpt-image-2 edit of final.jpg padded to 3:2 ("replace the text, same font, everything else identical"),
   then only the top 210 px band pasted onto final.jpg -> `thumbnail/composite_episode2_1.jpg` (robots pixel-identical, diff 2.6). Fallback without AI: cv2 inpaint + Passion One.
 - Deliverables: `final_versions/microduck_lake_E04_freeze_T1_landscape.mp4`, `final_versions/microduck_lake_thumbnail_episode2_landscape.jpg`, both in ~/Videos.
+
+## FINAL landscape (2026-09-05, Rémi's pick): boom C ("dun"), freeze at 42.6 s
+`final_versions/microduck_lake_ep2_landscape.mp4` = `landscape/lake_landscape_freeze_C_late.mp4`, built with
+`python3 scripts/build_landscape.py landscape/boom_C_dun.mp3 out.mp4 -6 42.6`. Thumbnail `final_versions/microduck_lake_ep2_thumbnail_landscape.jpg`. Both in ~/Videos.
+The earlier freeze at 41.6 s left only 0.7 s of garden before the first word; 42.6 s is the last clean garden frame before the pan back.
+
+## FINAL landscape v2 (2026-09-05): typewriter ending
+`final_versions/microduck_lake_ep2_landscape.mp4` (64.1 s) = `landscape/lake_landscape_ending.mp4`, built with
+`python3 scripts/build_landscape_v2.py landscape/boom_C_dun.mp3 out.mp4 -6 42.6 57.9 "Nice try but the lake trip is still ON."`
+Freeze on Reachy's bowed head at 57.9 s (source), music continues, text types at 18 chars/s (Courier New Bold 66, click per char, bell on the period),
+timed so the cue's natural final hit (cue time 17.0-17.5 s) lands on the last letters; 1.5 s hold, fade. The cue is 22 s and ends by itself, so the ending length is bounded by it.
