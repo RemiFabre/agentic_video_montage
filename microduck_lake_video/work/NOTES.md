@@ -51,3 +51,13 @@ Pivot at 40.9 s (garden fills the frame; pan starts 40.3, back on Reachy 43.5). 
 `final_versions/microduck_lake_E04_then_T1_vertical.mp4` = `candidates_switch/lake_switch_E04_then_T1_adventure_kickoff_vertical.mp4`, copied to `~/Videos/`.
 Music: E04 pixar_confession until the garden reveal (40.9 s), 0.3 s silence, T1 adventure_kickoff from 41.2 s to the end. Rebuild:
 `THR=0.02 zsh scripts/mix_two_cues.sh 03_captioned_clean.mp4 music/E04_pixar_confession.mp3 music_switch/T1_adventure_kickoff.mp3 out.mp4 40.9 41.2 1.027846 59.066 -12 -11.5`
+
+## Round 5 (2026-09-05): landscape re-cut for YouTube after the vertical post underperformed (~20x less reach than ep1)
+- Reasons discussed: Friday post, hype decay, and above all the vertical file became a Short on a long-form channel (Shorts and long-form are recommended separately; ep1 viewers are not shown ep2).
+- `scripts/build_landscape.py` -> `landscape/lake_landscape_freeze_A.mp4` (1920x1080, 61.4 s): vertical picture scaled to 608x1080 on black sides;
+  freeze at 41.6 s (garden fills the frame), ABSOLUTELY / PERFECT / WEATHER stamp in (Impact 230 px, white, 10 px black stroke, `landscape/make_words.py`),
+  0.8 s each with a boom (ElevenLabs SFX `landscape/boom_A_vine.mp3`, -6 dB, peak -6.4 dBFS), then the picture resumes and T1 kicks in. E04 cut at 40.9 as before.
+- Thumbnail: ep1's `~/Videos/agentic_socials/thumbnails/MEYsC6ikATo/final.jpg` had its text drawn by gpt-image-2 (rounded font, not on this Mac; all local bases
+  already carry a different "NEW FRIEND?" in Impact). Fix: gpt-image-2 edit of final.jpg padded to 3:2 ("replace the text, same font, everything else identical"),
+  then only the top 210 px band pasted onto final.jpg -> `thumbnail/composite_episode2_1.jpg` (robots pixel-identical, diff 2.6). Fallback without AI: cv2 inpaint + Passion One.
+- Deliverables: `final_versions/microduck_lake_E04_freeze_T1_landscape.mp4`, `final_versions/microduck_lake_thumbnail_episode2_landscape.jpg`, both in ~/Videos.
