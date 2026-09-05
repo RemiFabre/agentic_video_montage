@@ -72,3 +72,9 @@ The earlier freeze at 41.6 s left only 0.7 s of garden before the first word; 42
 `python3 scripts/build_landscape_v2.py landscape/boom_C_dun.mp3 out.mp4 -6 42.6 57.9 "Nice try but the lake trip is still ON."`
 Freeze on Reachy's bowed head at 57.9 s (source), music continues, text types at 18 chars/s (Courier New Bold 66, click per char, bell on the period),
 timed so the cue's natural final hit (cue time 17.0-17.5 s) lands on the last letters; 1.5 s hold, fade. The cue is 22 s and ends by itself, so the ending length is bounded by it.
+
+## Thumbnail B (2026-09-05): sad duck + "NICE TRY"
+Frame 23.0 s of the cut (01_trimmed, no captions; head just starting to droop, eye visible), 16:9 crop y=360..968 of the vertical frame, upscaled to 1280x720.
+Text added by gpt-image-2 edit with ep1's final.jpg as a style reference (prompt `thumbnail/duck/prompt_nicetry.txt`); of 2 outputs one recomposed the shot (diff 24), the other is pixel-faithful (diff 2.1) -> kept.
+`final_versions/microduck_lake_ep2_thumbnail_nicetry_landscape.jpg`. Thumbnail A stays `..._thumbnail_landscape.jpg` (ep1 photo, "EPISODE 2"). Both for YouTube Test & Compare.
+Lesson: with gpt-image-2 edits, always request n=2 and keep the one whose pixels match the input outside the text; about half the outputs silently recompose.
